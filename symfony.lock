@@ -34,6 +34,9 @@
             "src/DataFixtures/AppFixtures.php"
         ]
     },
+    "liip/test-fixtures-bundle": {
+        "version": "2.4.0"
+    },
     "phpunit/phpunit": {
         "version": "9.5",
         "recipe": {
