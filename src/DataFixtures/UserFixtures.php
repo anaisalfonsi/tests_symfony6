@@ -20,7 +20,7 @@ class UserFixtures extends Fixture
     {
         for($i = 0 ; $i < 10; $i++) {
             $user = new User();
-            $user->setEmail("user$i@mail.com");
+            $user->setEmail("user". $i+1 ."@mail.com");
             $user->setPassword($this->passwordHasher->hashPassword($user, 'user'));
             $user->setRoles(['ROLE_ADMIN']);
             $manager->persist($user);
