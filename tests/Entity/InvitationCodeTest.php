@@ -4,11 +4,24 @@ namespace App\Tests\Entity;
 
 use App\Entity\InvitationCode;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Liip\TestFixturesBundle\Services\DatabaseToolCollection;
+use Liip\TestFixturesBundle\Services\DatabaseTools\AbstractDatabaseTool;
 
 
 class InvitationCodeTest extends KernelTestCase
 {
+    /**
+     * @var AbstractDatabaseTool
+     */
+    protected $databaseTool;
 
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->databaseTool = static::getContainer()->get(DatabaseToolCollection::class)->get();
+    }
+    
     public function getEntity() : InvitationCode
     {
         return (new InvitationCode())
@@ -19,16 +32,23 @@ class InvitationCodeTest extends KernelTestCase
 
     public function assertHasErrors(InvitationCode $code, int $number = 0)
     {
-        $error = static::getContainer()->get('validator')->validate($code);
+        $errors = static::getContainer()->get('validator')->validate($code);
 
-        $this->assertCount($number, $error);
+        $messages = [];
+        
+        /** @var ConstraintViolation $error */
+        foreach($errors as $error) {
+            $messages[] = $error->getPropertyPath() . ' => ' . $error->getMessage();
+        }
+        $this->assertCount($number, $errors, implode(', ', $messages));
+
+        $this->assertCount($number, $errors);
     }
 
 
     public function testValidEntity() 
     {
         $this->assertHasErrors($this->getEntity(), 0);
-
     }
 
     public function testInvalidCodeEntity() 
@@ -45,5 +65,20 @@ class InvitationCodeTest extends KernelTestCase
     public function testInvalidBlankDescriptionEntity()
     {
         $this->assertHasErrors($this->getEntity()->setDescription(''), 1);
+    }
+
+    public function testInvalidUsedCodeEntity()
+    {
+        $this->databaseTool->loadAliceFixture([
+            dirname(__DIR__) . '/Fixtures/invitation_codes.yml'
+        ]);
+
+        $this->assertHasErrors($this->getEntity()->setCode("54321"), 1);
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($this->databaseTool);
     }
 }
